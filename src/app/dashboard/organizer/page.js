@@ -8,6 +8,11 @@ import EditInitiativeModal from '@/components/EditInitiativeModal';
 export default function OrganizerDashboard() {
   const [activeTab, setActiveTab] = useState('campaigns');
   const [initiatives, setInitiatives] = useState([]);
+  const [stats, setStats] = useState({
+    totalCollected: 0,
+    totalDonations: 0,
+    totalInitiatives: 0,
+  });
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -74,6 +79,13 @@ export default function OrganizerDashboard() {
       const response = await fetch(`/api/organizer/initiatives?type=${activeTab}&organizerId=${organizer.id}`);
       const data = await response.json();
       setInitiatives(data.initiatives || []);
+      setStats(
+        data.stats || {
+          totalCollected: 0,
+          totalDonations: 0,
+          totalInitiatives: 0,
+        }
+      );
     } catch (error) {
       console.error('Error fetching initiatives:', error);
       alert('Failed to load initiatives');
@@ -151,6 +163,21 @@ export default function OrganizerDashboard() {
             </button>
           </div>
 
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
+              <p className="text-sm font-medium text-gray-500">Collected So Far</p>
+              <p className="mt-1 text-2xl font-bold text-sky-700">৳ {stats.totalCollected.toLocaleString()}</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-sm font-medium text-gray-500">Total Donations</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalDonations}</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-sm font-medium text-gray-500">Active In This Tab</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalInitiatives}</p>
+            </div>
+          </div>
+
           {/* Tabs */}
           <div className="flex gap-2 border-b border-gray-200">
             {tabs.map((tab) => (
@@ -215,6 +242,14 @@ export default function OrganizerDashboard() {
                           <p className="text-gray-900">৳ {initiative.expected_budget?.toLocaleString() || 'N/A'}</p>
                         </div>
                         <div>
+                          <p className="text-sm font-medium text-gray-500">Collected Donations</p>
+                          <p className="text-gray-900">৳ {initiative.collected_amount?.toLocaleString() || '0'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Donation Count</p>
+                          <p className="text-gray-900">{initiative.donation_count || 0}</p>
+                        </div>
+                        <div>
                           <p className="text-sm font-medium text-gray-500">Manpower Needed</p>
                           <p className="text-gray-900">{initiative.manpower || 'N/A'} people</p>
                         </div>
@@ -228,6 +263,21 @@ export default function OrganizerDashboard() {
                         </div>
                       </div>
                     )}
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <div className="rounded-lg bg-emerald-50 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Collected</p>
+                        <p className="mt-1 text-lg font-bold text-emerald-900">৳ {initiative.collected_amount?.toLocaleString() || '0'}</p>
+                      </div>
+                      <div className="rounded-lg bg-amber-50 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-wide text-amber-700">Progress</p>
+                        <p className="mt-1 text-lg font-bold text-amber-900">
+                          {initiative.expected_budget
+                            ? `${Math.min(100, Math.round(((initiative.collected_amount || 0) / initiative.expected_budget) * 100))}%`
+                            : '0%'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Action Buttons */}

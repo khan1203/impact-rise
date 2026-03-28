@@ -1,11 +1,5 @@
 node_modules
 .next
 .env
-.env.example
 .codex
-
-PROJECT_CHECKLIST.md
-SETUP_GUIDE.md
-SETUP_SUMMARY.md
-POSTGRES_PRISMA_SETUP.md
-README.md
+.gitignore

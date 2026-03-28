@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createInitiative, getInitiatives } from '@/lib/db';
+import { createInitiative, getOrganizerInitiatives } from '@/lib/db';
 
 export async function GET(request) {
   try {
@@ -11,12 +11,22 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Organizer ID required' }, { status: 400 });
     }
 
-    const allInitiatives = await getInitiatives(type);
-    const organizerInitiatives = allInitiatives.filter(
-      (item) => item.organizer_id === parseInt(organizerId, 10)
+    const organizerInitiatives = await getOrganizerInitiatives(organizerId, type);
+
+    const stats = organizerInitiatives.reduce(
+      (acc, initiative) => {
+        acc.totalCollected += initiative.collected_amount || 0;
+        acc.totalDonations += initiative.donation_count || 0;
+        return acc;
+      },
+      {
+        totalCollected: 0,
+        totalDonations: 0,
+        totalInitiatives: organizerInitiatives.length,
+      }
     );
 
-    return NextResponse.json({ initiatives: organizerInitiatives });
+    return NextResponse.json({ initiatives: organizerInitiatives, stats });
   } catch (error) {
     console.error('Error fetching initiatives:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

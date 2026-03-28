@@ -69,6 +69,10 @@ export function serializeInitiative(initiative) {
     return null;
   }
 
+  const donations = initiative.donations ?? [];
+  const collected_amount = donations.reduce((sum, donation) => sum + donation.amount, 0);
+  const donation_count = donations.length;
+
   return {
     id: initiative.id,
     title: initiative.title,
@@ -87,6 +91,8 @@ export function serializeInitiative(initiative) {
     type: TYPE_LABEL_MAP[initiative.type] ?? 'campaign',
     created_at: initiative.createdAt.toISOString(),
     updated_at: initiative.updatedAt.toISOString(),
+    collected_amount,
+    donation_count,
   };
 }
 
@@ -95,6 +101,9 @@ export async function getInitiatives(type = null) {
 
   const initiatives = await prisma.initiative.findMany({
     where: normalizedType ? { type: normalizedType } : undefined,
+    include: {
+      donations: true,
+    },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -104,9 +113,29 @@ export async function getInitiatives(type = null) {
 export async function getInitiativeById(id) {
   const initiative = await prisma.initiative.findUnique({
     where: { id: Number(id) },
+    include: {
+      donations: true,
+    },
   });
 
   return serializeInitiative(initiative);
+}
+
+export async function getOrganizerInitiatives(organizerId, type = null) {
+  const normalizedType = type ? normalizeInitiativeType(type) : null;
+
+  const initiatives = await prisma.initiative.findMany({
+    where: {
+      organizerId: Number(organizerId),
+      ...(normalizedType ? { type: normalizedType } : {}),
+    },
+    include: {
+      donations: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return initiatives.map(serializeInitiative);
 }
 
 export async function createInitiative(data) {
