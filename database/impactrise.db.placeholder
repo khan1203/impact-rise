@@ -1,0 +1,2 @@
+This file will be replaced with the actual SQLite database when the server starts.
+The init.sql script will be executed to create tables and seed data.
