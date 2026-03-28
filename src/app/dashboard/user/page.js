@@ -5,6 +5,12 @@ import { Heart, DollarSign, CheckCircle } from 'lucide-react';
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({
+    totalAmount: 0,
+    donationsCount: 0,
+    supportedCount: 0,
+  });
+  const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,11 +47,28 @@ export default function UserDashboard() {
       const data = await response.json();
       const userData = JSON.parse(localStorage.getItem('currentUser'));
       setUser(userData);
+      await loadDonations(userData.id);
       setLoading(false);
     } catch (error) {
       console.error('Verification error:', error);
       localStorage.removeItem('currentUser');
       window.location.href = '/login';
+    }
+  };
+
+  const loadDonations = async (userId) => {
+    try {
+      const response = await fetch(`/api/users/${userId}/donations`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      setStats(data.stats || { totalAmount: 0, donationsCount: 0, supportedCount: 0 });
+      setDonations(data.donations || []);
+    } catch (error) {
+      console.error('Error loading donations:', error);
     }
   };
 
@@ -84,7 +107,7 @@ export default function UserDashboard() {
               </div>
               <div>
                 <p className="text-gray-600 text-sm font-medium">Total Donated</p>
-                <p className="text-2xl font-bold text-gray-900">৳ 0</p>
+                <p className="text-2xl font-bold text-gray-900">৳ {stats.totalAmount.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -97,7 +120,7 @@ export default function UserDashboard() {
               </div>
               <div>
                 <p className="text-gray-600 text-sm font-medium">Donations Made</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.donationsCount}</p>
               </div>
             </div>
           </div>
@@ -110,7 +133,7 @@ export default function UserDashboard() {
               </div>
               <div>
                 <p className="text-gray-600 text-sm font-medium">Campaigns Supported</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.supportedCount}</p>
               </div>
             </div>
           </div>
@@ -119,9 +142,26 @@ export default function UserDashboard() {
         {/* Donation History */}
         <div className="rounded-xl bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-bold text-gray-900">Recent Donations</h2>
-          <div className="text-center py-8 text-gray-500">
-            <p>No donations made yet. Start supporting initiatives today!</p>
-          </div>
+          {donations.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No donations made yet. Start supporting initiatives today!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {donations.map((donation) => (
+                <div key={donation.id} className="flex items-center justify-between rounded-lg border border-gray-100 p-4">
+                  <div>
+                    <p className="font-semibold text-gray-900">{donation.title}</p>
+                    <p className="text-sm text-gray-500 capitalize">{donation.type}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-sky-700">৳ {donation.amount.toLocaleString()}</p>
+                    <p className="text-xs text-gray-500">{new Date(donation.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

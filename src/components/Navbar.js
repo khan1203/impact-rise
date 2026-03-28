@@ -12,6 +12,7 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [userType, setUserType] = useState('');
+  const [role, setRole] = useState('');
   const [dashboardPath, setDashboardPath] = useState('/dashboard/user');
   const [activeIndicatorStyle, setActiveIndicatorStyle] = useState({ left: '0px', width: '0px' });
   const navContainerRef = useRef(null);
@@ -64,16 +65,19 @@ export default function Navbar() {
         setIsLoggedIn(true);
         setFirstName(userData.firstName || 'User');
         setUserType(userData.userType || 'donor');
+        setRole(userData.role || 'user');
         
-        // Set dashboard path based on userType
-        const path = userData.userType?.toLowerCase() === 'organizer' 
-          ? '/dashboard/organizer' 
-          : '/dashboard/user';
+        const path = userData.role?.toLowerCase() === 'admin'
+          ? '/dashboard/admin'
+          : userData.userType?.toLowerCase() === 'organizer'
+            ? '/dashboard/organizer'
+            : '/dashboard/user';
         setDashboardPath(path);
       } else {
         setIsLoggedIn(false);
         setFirstName('');
         setUserType('');
+        setRole('');
         setDashboardPath('/dashboard/user');
       }
     };
@@ -97,6 +101,8 @@ export default function Navbar() {
     localStorage.removeItem('currentUser');
     setIsLoggedIn(false);
     setFirstName('');
+    setUserType('');
+    setRole('');
     router.push('/');
   };
 
@@ -138,7 +144,7 @@ export default function Navbar() {
               <div className="flex items-center gap-3 ml-6 pl-6 border-l-2 border-white border-opacity-30">
                 <div className="flex flex-col items-end">
                   <span className="text-white font-bold text-sm">{firstName}</span>
-                  <span className="text-sky-100 text-xs capitalize">{userType}</span>
+                  <span className="text-sky-100 text-xs capitalize">{role === 'admin' ? 'admin' : userType}</span>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center shadow-lg">
                   <span className="text-sky-900 font-bold text-lg">{firstName.charAt(0).toUpperCase()}</span>
@@ -197,7 +203,7 @@ export default function Navbar() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-white font-bold">{firstName}</span>
-                    <span className="text-sky-100 text-xs capitalize">{userType}</span>
+                    <span className="text-sky-100 text-xs capitalize">{role === 'admin' ? 'admin' : userType}</span>
                   </div>
                 </div>
                 <Link href={dashboardPath} className="block px-4 py-3 text-white hover:bg-sky-800 font-semibold rounded-lg mx-2 hover:bg-opacity-30 transition">

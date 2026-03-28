@@ -1,64 +1,229 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import prisma from '@/lib/prisma';
 
-let db = null;
+const TYPE_MAP = {
+  campaign: 'CAMPAIGN',
+  campaigns: 'CAMPAIGN',
+  seminar: 'SEMINAR',
+  seminars: 'SEMINAR',
+  workshop: 'WORKSHOP',
+  workshops: 'WORKSHOP',
+};
 
-export function getDb() {
-  if (!db) {
-    const dbPath = path.join(process.cwd(), 'database', 'impactrise.db');
-    db = new Database(dbPath);
-    db.pragma('journal_mode = WAL');
+const TYPE_LABEL_MAP = {
+  CAMPAIGN: 'campaign',
+  SEMINAR: 'seminar',
+  WORKSHOP: 'workshop',
+};
+
+const USER_TYPE_MAP = {
+  donor: 'DONOR',
+  organizer: 'ORGANIZER',
+};
+
+const USER_TYPE_LABEL_MAP = {
+  DONOR: 'donor',
+  ORGANIZER: 'organizer',
+};
+
+const ROLE_LABEL_MAP = {
+  ADMIN: 'admin',
+  USER: 'user',
+};
+
+function normalizeInitiativeType(type) {
+  return TYPE_MAP[type?.toLowerCase?.()] ?? null;
+}
+
+function normalizeUserType(userType) {
+  return USER_TYPE_MAP[userType?.toLowerCase?.()] ?? 'DONOR';
+}
+
+function normalizeRole(role) {
+  return role === 'admin' ? 'ADMIN' : 'USER';
+}
+
+export function serializeUser(user, { includePassword = false } = {}) {
+  if (!user) {
+    return null;
   }
-  return db;
+
+  const serializedUser = {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    userType: USER_TYPE_LABEL_MAP[user.userType] ?? 'donor',
+    role: ROLE_LABEL_MAP[user.role] ?? 'user',
+    created_at: user.createdAt.toISOString(),
+  };
+
+  if (includePassword) {
+    serializedUser.password = user.password;
+  }
+
+  return serializedUser;
 }
 
-export function getCampaigns(type = null) {
-  const dbConn = getDb();
-  const query = type
-    ? dbConn.prepare('SELECT * FROM campaigns WHERE type = ? ORDER BY created_at DESC')
-    : dbConn.prepare('SELECT * FROM campaigns ORDER BY created_at DESC');
+export function serializeInitiative(initiative) {
+  if (!initiative) {
+    return null;
+  }
 
-  return type ? query.all(type) : query.all();
+  return {
+    id: initiative.id,
+    title: initiative.title,
+    short_description: initiative.shortDescription,
+    description: initiative.description,
+    banner_url: initiative.bannerUrl,
+    date: initiative.date,
+    time: initiative.time,
+    manpower: initiative.manpower,
+    expected_budget: initiative.expectedBudget,
+    organizer_id: initiative.organizerId,
+    organizer_name: initiative.organizerName,
+    bank_account: initiative.bankAccount,
+    bkash_number: initiative.bkashNumber,
+    nagad_number: initiative.nagadNumber,
+    type: TYPE_LABEL_MAP[initiative.type] ?? 'campaign',
+    created_at: initiative.createdAt.toISOString(),
+    updated_at: initiative.updatedAt.toISOString(),
+  };
 }
 
-export function getCampaignById(id) {
-  const dbConn = getDb();
-  return dbConn.prepare('SELECT * FROM campaigns WHERE id = ?').get(id);
+export async function getInitiatives(type = null) {
+  const normalizedType = type ? normalizeInitiativeType(type) : null;
+
+  const initiatives = await prisma.initiative.findMany({
+    where: normalizedType ? { type: normalizedType } : undefined,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return initiatives.map(serializeInitiative);
 }
 
-export function createCampaign(data) {
-  const dbConn = getDb();
-  const stmt = dbConn.prepare(`
-    INSERT INTO campaigns (title, short_description, description, banner_url, date, time, manpower, expected_budget, organizer_id, organizer_name, bank_account, bkash_number, nagad_number, type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+export async function getInitiativeById(id) {
+  const initiative = await prisma.initiative.findUnique({
+    where: { id: Number(id) },
+  });
 
-  return stmt.run(
-    data.title,
-    data.short_description,
-    data.description,
-    data.banner_url,
-    data.date,
-    data.time,
-    data.manpower,
-    data.expected_budget,
-    data.organizer_id,
-    data.organizer_name,
-    data.bank_account,
-    data.bkash_number,
-    data.nagad_number,
-    data.type
-  );
+  return serializeInitiative(initiative);
 }
 
-export function getDonationsByUser(userId) {
-  const dbConn = getDb();
-  return dbConn
-    .prepare(`
-      SELECT d.*, c.title, c.type
-      FROM donations d
-      JOIN campaigns c ON d.campaign_id = c.id
-      WHERE d.user_id = ?
-    `)
-    .all(userId);
+export async function createInitiative(data) {
+  const initiative = await prisma.initiative.create({
+    data: {
+      title: data.title,
+      shortDescription: data.short_description,
+      description: data.description,
+      bannerUrl: data.banner_url || null,
+      date: data.date,
+      time: data.time || null,
+      manpower: data.manpower ?? null,
+      expectedBudget: data.expected_budget,
+      organizerId: Number(data.organizer_id),
+      organizerName: data.organizer_name,
+      bankAccount: data.bank_account || null,
+      bkashNumber: data.bkash_number || null,
+      nagadNumber: data.nagad_number || null,
+      type: normalizeInitiativeType(data.type),
+    },
+  });
+
+  return serializeInitiative(initiative);
+}
+
+export async function updateInitiative(id, data) {
+  const initiative = await prisma.initiative.update({
+    where: { id: Number(id) },
+    data: {
+      title: data.title,
+      shortDescription: data.short_description,
+      description: data.description,
+      bannerUrl: data.banner_url || null,
+      date: data.date,
+      time: data.time || null,
+      manpower: data.manpower ?? null,
+      expectedBudget: data.expected_budget,
+      bankAccount: data.bank_account || null,
+      bkashNumber: data.bkash_number || null,
+      nagadNumber: data.nagad_number || null,
+    },
+  });
+
+  return serializeInitiative(initiative);
+}
+
+export async function deleteInitiative(id) {
+  await prisma.initiative.delete({
+    where: { id: Number(id) },
+  });
+}
+
+export async function getUserByEmail(email, { includePassword = false } = {}) {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  return serializeUser(user, { includePassword });
+}
+
+export async function createUser(data) {
+  const createdUser = await prisma.user.create({
+    data: {
+      email: data.email,
+      password: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      userType: normalizeUserType(data.userType),
+      role: normalizeRole(data.role),
+    },
+  });
+
+  return serializeUser(createdUser);
+}
+
+export async function getDonationSummaryByUser(userId) {
+  const donations = await prisma.donation.findMany({
+    where: { userId: Number(userId) },
+    include: {
+      initiative: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return donations.map((donation) => ({
+    id: donation.id,
+    user_id: donation.userId,
+    campaign_id: donation.initiativeId,
+    amount: donation.amount,
+    transaction_id: donation.transactionId,
+    created_at: donation.createdAt.toISOString(),
+    title: donation.initiative.title,
+    type: TYPE_LABEL_MAP[donation.initiative.type] ?? 'campaign',
+  }));
+}
+
+export async function createDonation(data) {
+  const donation = await prisma.donation.create({
+    data: {
+      userId: Number(data.user_id),
+      initiativeId: Number(data.initiative_id),
+      amount: Number(data.amount),
+      transactionId: data.transaction_id || null,
+    },
+    include: {
+      initiative: true,
+    },
+  });
+
+  return {
+    id: donation.id,
+    user_id: donation.userId,
+    campaign_id: donation.initiativeId,
+    amount: donation.amount,
+    transaction_id: donation.transactionId,
+    created_at: donation.createdAt.toISOString(),
+    title: donation.initiative.title,
+    type: TYPE_LABEL_MAP[donation.initiative.type] ?? 'campaign',
+  };
 }

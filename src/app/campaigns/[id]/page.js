@@ -1,30 +1,12 @@
 import Image from 'next/image';
 import { Clock, Users, DollarSign, Award } from 'lucide-react';
 import DonateModal from '@/components/DonateModal';
+import { getInitiativeById } from '@/lib/db';
 
-// Mock campaigns data
-const mockCampaigns = [
-  {
-    id: '1',
-    title: 'Digital Literacy Program',
-    short_description: 'Empowering rural youth with tech skills',
-    description: 'A comprehensive program to teach digital literacy to rural youth. This initiative focuses on providing access to technology and digital skills training to underserved communities.',
-    banner_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800',
-    date: '2026-04-15',
-    time: '10:00 AM',
-    manpower: 25,
-    expected_budget: 150000,
-    organizer_id: 1,
-    organizer_name: 'Admin User',
-    bank_account: '1234567890',
-    bkash_number: '01712345678',
-    nagad_number: '01812345678',
-    type: 'campaign',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-export default function CampaignDetail({ params }) {
-  const campaign = mockCampaigns.find((c) => c.id === params.id);
+export default async function CampaignDetail({ params }) {
+  const campaign = await getInitiativeById(params.id);
 
   if (!campaign || campaign.type !== 'campaign') {
     return (
@@ -42,7 +24,7 @@ export default function CampaignDetail({ params }) {
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-2xl bg-white shadow-2xl border border-sky-100">
           <div className="relative h-96">
-            <Image src={campaign.banner_url} alt={campaign.title} fill className="object-cover" />
+            <Image src={campaign.banner_url || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800'} alt={campaign.title} fill className="object-cover" />
           </div>
 
           <div className="p-8">
@@ -101,7 +83,7 @@ export default function CampaignDetail({ params }) {
               </div>
             </div>
 
-            <DonateModal campaignTitle={campaign.title} />
+            <DonateModal campaignTitle={campaign.title} initiativeId={campaign.id} />
           </div>
         </div>
       </div>

@@ -1,28 +1,10 @@
 import Card from '@/components/Card';
+import { getInitiatives } from '@/lib/db';
 
-// Mock data
-const mockWorkshops = [
-  {
-    id: 3,
-    title: 'Leadership Workshop',
-    short_description: 'Building future leaders',
-    description: 'Intensive workshop on youth leadership development',
-    banner_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800',
-    date: '2026-06-10',
-    time: '2:00 PM',
-    manpower: 20,
-    expected_budget: 80000,
-    organizer_id: 1,
-    organizer_name: 'Admin User',
-    bank_account: '1234567890',
-    bkash_number: '01712345678',
-    nagad_number: '01812345678',
-    type: 'workshop',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-export default function Workshops() {
-  const workshops = mockWorkshops;
+export default async function Workshops() {
+  const workshops = await getInitiatives('workshop');
 
   return (
     <div className="min-h-screen bg-white py-12">

@@ -1,19 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
-const usersFilePath = path.join(process.cwd(), 'database', 'users.json');
-
-function readUsers() {
-  try {
-    if (fs.existsSync(usersFilePath)) {
-      const data = fs.readFileSync(usersFilePath, 'utf-8');
-      return JSON.parse(data).users || [];
-    }
-  } catch (error) {
-    console.error('Error reading users:', error);
-  }
-  return [];
-}
+import { getUserByEmail } from '@/lib/db';
 
 export async function POST(request) {
   try {
@@ -27,10 +12,7 @@ export async function POST(request) {
       );
     }
 
-    const users = readUsers();
-
-    // Find user by email
-    const user = users.find(u => u.email === email);
+    const user = await getUserByEmail(email, { includePassword: true });
 
     if (!user || user.password !== password) {
       return Response.json(
@@ -39,7 +21,6 @@ export async function POST(request) {
       );
     }
 
-    // Return user data (without password)
     const { password: _, ...userWithoutPassword } = user;
     return Response.json({
       success: true,

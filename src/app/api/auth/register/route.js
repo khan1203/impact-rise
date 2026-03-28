@@ -1,32 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
-// Simple in-memory user storage (will be replaced with proper SQLite later)
-const usersFilePath = path.join(process.cwd(), 'database', 'users.json');
-
-function readUsers() {
-  try {
-    if (fs.existsSync(usersFilePath)) {
-      const data = fs.readFileSync(usersFilePath, 'utf-8');
-      return JSON.parse(data).users || [];
-    }
-  } catch (error) {
-    console.error('Error reading users:', error);
-  }
-  return [];
-}
-
-function saveUsers(users) {
-  try {
-    const dir = path.dirname(usersFilePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(usersFilePath, JSON.stringify({ users }, null, 2));
-  } catch (error) {
-    console.error('Error saving users:', error);
-  }
-}
+import { createUser, getUserByEmail } from '@/lib/db';
 
 export async function POST(request) {
   try {
@@ -40,37 +12,27 @@ export async function POST(request) {
       );
     }
 
-    const users = readUsers();
+    const existingUser = await getUserByEmail(email);
 
-    // Check if email already exists
-    if (users.some(user => user.email === email)) {
+    if (existingUser) {
       return Response.json(
         { error: 'Email already registered' },
         { status: 400 }
       );
     }
 
-    // Create new user
-    const newUser = {
-      id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 2,
+    const newUser = await createUser({
       email,
-      password, // In production, hash this with bcrypt
+      password,
       firstName,
       lastName,
       userType: userType || 'donor',
       role: 'user',
-      created_at: new Date().toISOString()
-    };
+    });
 
-    // Save user
-    users.push(newUser);
-    saveUsers(users);
-
-    // Return success (don't send password back)
-    const { password: _, ...userWithoutPassword } = newUser;
     return Response.json({
       success: true,
-      user: userWithoutPassword,
+      user: newUser,
       message: 'Registration successful!'
     }, { status: 201 });
 

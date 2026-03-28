@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getCampaigns } from '@/lib/db';
+import { getInitiatives } from '@/lib/db';
 
 export async function GET() {
   try {
-    const seminars = getCampaigns('seminar');
+    const seminars = await getInitiatives('seminar');
     return NextResponse.json(seminars);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

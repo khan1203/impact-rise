@@ -1,30 +1,12 @@
 import Image from 'next/image';
 import { Clock, Users, DollarSign, Award } from 'lucide-react';
 import DonateModal from '@/components/DonateModal';
+import { getInitiativeById } from '@/lib/db';
 
-// Mock workshops data
-const mockWorkshops = [
-  {
-    id: '3',
-    title: 'Leadership Workshop',
-    short_description: 'Building future leaders',
-    description: 'Intensive workshop on youth leadership development. Learn essential leadership skills, develop your confidence, and connect with other young leaders who are passionate about making a difference.',
-    banner_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800',
-    date: '2026-06-10',
-    time: '2:00 PM',
-    manpower: 20,
-    expected_budget: 80000,
-    organizer_id: 1,
-    organizer_name: 'Admin User',
-    bank_account: '1234567890',
-    bkash_number: '01712345678',
-    nagad_number: '01812345678',
-    type: 'workshop',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-export default function WorkshopDetail({ params }) {
-  const workshop = mockWorkshops.find((w) => w.id === params.id);
+export default async function WorkshopDetail({ params }) {
+  const workshop = await getInitiativeById(params.id);
 
   if (!workshop || workshop.type !== 'workshop') {
     return (
@@ -42,7 +24,7 @@ export default function WorkshopDetail({ params }) {
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-2xl bg-white shadow-2xl border border-sky-100">
           <div className="relative h-96">
-            <Image src={workshop.banner_url} alt={workshop.title} fill className="object-cover" />
+            <Image src={workshop.banner_url || 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800'} alt={workshop.title} fill className="object-cover" />
           </div>
           <div className="p-8">
             <h1 className="mb-6 text-4xl font-bold text-sky-700">{workshop.title}</h1>
@@ -96,7 +78,7 @@ export default function WorkshopDetail({ params }) {
                 </p>
               </div>
             </div>
-            <DonateModal campaignTitle={workshop.title} />
+            <DonateModal campaignTitle={workshop.title} initiativeId={workshop.id} />
           </div>
         </div>
       </div>

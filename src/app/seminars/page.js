@@ -1,28 +1,10 @@
 import Card from '@/components/Card';
+import { getInitiatives } from '@/lib/db';
 
-// Mock data
-const mockSeminars = [
-  {
-    id: 2,
-    title: 'Climate Action Summit',
-    short_description: 'Youth-led environmental awareness',
-    description: 'A seminar on climate change and sustainable solutions',
-    banner_url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800',
-    date: '2026-05-20',
-    time: '9:00 AM',
-    manpower: 40,
-    expected_budget: 200000,
-    organizer_id: 1,
-    organizer_name: 'Admin User',
-    bank_account: '1234567890',
-    bkash_number: '01712345678',
-    nagad_number: '01812345678',
-    type: 'seminar',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-export default function Seminars() {
-  const seminars = mockSeminars;
+export default async function Seminars() {
+  const seminars = await getInitiatives('seminar');
 
   return (
     <div className="min-h-screen bg-white py-12">

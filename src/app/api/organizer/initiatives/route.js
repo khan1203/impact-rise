@@ -1,33 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const initiativesFilePath = path.join(process.cwd(), 'database', 'initiatives.json');
-
-function readInitiatives() {
-  try {
-    if (fs.existsSync(initiativesFilePath)) {
-      const data = fs.readFileSync(initiativesFilePath, 'utf-8');
-      return JSON.parse(data).initiatives || [];
-    }
-  } catch (error) {
-    console.error('Error reading initiatives:', error);
-  }
-  return [];
-}
-
-function saveInitiatives(initiatives) {
-  try {
-    const dir = path.dirname(initiativesFilePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(initiativesFilePath, JSON.stringify({ initiatives }, null, 2));
-  } catch (error) {
-    console.error('Error saving initiatives:', error);
-    throw error;
-  }
-}
+import { createInitiative, getInitiatives } from '@/lib/db';
 
 export async function GET(request) {
   try {
@@ -39,12 +11,9 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Organizer ID required' }, { status: 400 });
     }
 
-    // Get all initiatives from JSON
-    const allInitiatives = readInitiatives();
-
-    // Filter by type and organizer ID
+    const allInitiatives = await getInitiatives(type);
     const organizerInitiatives = allInitiatives.filter(
-      (item) => item.type === type && item.organizer_id === parseInt(organizerId)
+      (item) => item.organizer_id === parseInt(organizerId, 10)
     );
 
     return NextResponse.json({ initiatives: organizerInitiatives });
@@ -66,21 +35,11 @@ export async function POST(request) {
       }
     }
 
-    const initiatives = readInitiatives();
-
-    // Generate new ID
-    const newId = initiatives.length > 0 ? Math.max(...initiatives.map(i => i.id)) + 1 : 1;
-
-    // Create new initiative
-    const newInitiative = {
-      id: newId,
+    const newInitiative = await createInitiative({
       ...data,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    initiatives.push(newInitiative);
-    saveInitiatives(initiatives);
+      expected_budget: Number(data.expected_budget),
+      manpower: data.manpower ? Number(data.manpower) : null,
+    });
 
     return NextResponse.json(
       { 

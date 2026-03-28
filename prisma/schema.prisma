@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  DONOR
+  ORGANIZER
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum InitiativeType {
+  CAMPAIGN
+  SEMINAR
+  WORKSHOP
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  password    String
+  firstName   String
+  lastName    String
+  userType    UserType     @default(DONOR)
+  role        UserRole     @default(USER)
+  createdAt   DateTime     @default(now())
+  initiatives Initiative[] @relation("OrganizerInitiatives")
+  donations   Donation[]
+}
+
+model Initiative {
+  id               Int            @id @default(autoincrement())
+  title            String
+  shortDescription String
+  description      String
+  bannerUrl        String?
+  date             String
+  time             String?
+  manpower         Int?
+  expectedBudget   Float
+  organizerId      Int
+  organizerName    String
+  bankAccount      String?
+  bkashNumber      String?
+  nagadNumber      String?
+  type             InitiativeType
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  organizer        User           @relation("OrganizerInitiatives", fields: [organizerId], references: [id], onDelete: Restrict)
+  donations        Donation[]
+}
+
+model Donation {
+  id            Int        @id @default(autoincrement())
+  userId        Int
+  initiativeId  Int
+  amount        Float
+  transactionId String?
+  createdAt     DateTime   @default(now())
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  initiative    Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+}

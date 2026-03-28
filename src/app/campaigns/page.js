@@ -1,28 +1,10 @@
 import Card from '@/components/Card';
+import { getInitiatives } from '@/lib/db';
 
-// Mock data - replace with database call when ready
-const mockCampaigns = [
-  {
-    id: 1,
-    title: 'Digital Literacy Program',
-    short_description: 'Empowering rural youth with tech skills',
-    description: 'A comprehensive program to teach digital literacy to rural youth',
-    banner_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800',
-    date: '2026-04-15',
-    time: '10:00 AM',
-    manpower: 25,
-    expected_budget: 150000,
-    organizer_id: 1,
-    organizer_name: 'Admin User',
-    bank_account: '1234567890',
-    bkash_number: '01712345678',
-    nagad_number: '01812345678',
-    type: 'campaign',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-export default function Campaigns() {
-  const campaigns = mockCampaigns;
+export default async function Campaigns() {
+  const campaigns = await getInitiatives('campaign');
 
   return (
     <div className="min-h-screen bg-white py-12">

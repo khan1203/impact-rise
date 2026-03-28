@@ -21,6 +21,16 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const getDashboardPath = (user) => {
+    if (user.role?.toLowerCase() === 'admin') {
+      return '/dashboard/admin';
+    }
+
+    return user.userType?.toLowerCase() === 'organizer'
+      ? '/dashboard/organizer'
+      : '/dashboard/user';
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -105,9 +115,7 @@ export default function RegisterPage() {
       window.dispatchEvent(new Event('userLoggedIn'));
 
       // Redirect to appropriate dashboard based on userType
-      const dashboardPath = data.user.userType?.toLowerCase() === 'organizer' 
-        ? '/dashboard/organizer' 
-        : '/dashboard/user';
+      const dashboardPath = getDashboardPath(data.user);
       
       router.push(dashboardPath);
     } catch (err) {
