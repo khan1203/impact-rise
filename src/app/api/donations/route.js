@@ -3,7 +3,7 @@ import { createDonation } from '@/lib/db';
 
 export async function POST(request) {
   try {
-    const { user_id, initiative_id, amount } = await request.json();
+    const { user_id, initiative_id, amount, transaction_id, payment_method } = await request.json();
 
     if (!user_id || !initiative_id || !amount) {
       return NextResponse.json(
@@ -16,7 +16,8 @@ export async function POST(request) {
       user_id,
       initiative_id,
       amount,
-      transaction_id: `TXN-${Date.now()}`,
+      transaction_id: transaction_id || `TXN-${Date.now()}`,
+      payment_method: payment_method || 'unknown',
     });
 
     return NextResponse.json(

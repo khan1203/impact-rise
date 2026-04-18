@@ -335,6 +335,7 @@ export async function getDonationSummaryByUser(userId) {
       campaign_id: donation.initiativeId,
       amount: donation.amount,
       transaction_id: donation.transactionId,
+      payment_method: donation.paymentMethod || 'unknown',
       created_at: donation.createdAt,
       title: initiative?.title || 'Unknown',
       type: initiative ? TYPE_LABEL_MAP[initiative.type] ?? 'campaign' : 'campaign',
@@ -352,6 +353,7 @@ export async function createDonation(data) {
     initiativeId: Number(data.initiative_id),
     amount: Number(data.amount),
     transactionId: data.transaction_id || null,
+    paymentMethod: data.payment_method || 'unknown',
     createdAt: new Date().toISOString(),
   };
 
@@ -366,6 +368,7 @@ export async function createDonation(data) {
     campaign_id: newDonation.initiativeId,
     amount: newDonation.amount,
     transaction_id: newDonation.transactionId,
+    payment_method: newDonation.paymentMethod,
     created_at: newDonation.createdAt,
     title: initiative?.title || 'Unknown',
     type: initiative ? TYPE_LABEL_MAP[initiative.type] ?? 'campaign' : 'campaign',

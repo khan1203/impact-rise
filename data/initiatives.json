@@ -77,7 +77,7 @@
   },
   {
     "id": 5,
-    "title": "Fajr Campaign",
+    "title": "Importance of Fajr Prayer in Youthhood",
     "shortDescription": "A community effort to encourage youth prayer attendance at Fajr.",
     "description": "All the youth around the area will be invited to join Fajr prayer in congregation at the local mosque.",
     "bannerUrl": "https://images.unsplash.com/photo-1519817650390-64a93db511aa?w=800",
@@ -92,6 +92,44 @@
     "nagadNumber": "018193927282",
     "type": "WORKSHOP",
     "createdAt": "2026-03-28T09:52:42.000Z",
-    "updatedAt": "2026-03-28T09:52:42.000Z"
+    "updatedAt": "2026-04-18T08:37:38.930Z"
+  },
+  {
+    "id": 6,
+    "title": "War Ethics and Tactics",
+    "shortDescription": "A community effort to know about the International war ethics, reasons of collision and others related to war",
+    "description": "A community effort to know about the International war ethics, reasons of collision and others related to war",
+    "bannerUrl": null,
+    "date": "2026-04-23",
+    "time": null,
+    "manpower": 40,
+    "expectedBudget": 54000,
+    "organizerId": 2,
+    "organizerName": "Organizer1 Khan",
+    "bankAccount": "DBBL-122435987",
+    "bkashNumber": "01719397202",
+    "nagadNumber": "018193927282",
+    "type": "WORKSHOP",
+    "createdAt": "2026-04-18T08:35:04.485Z",
+    "updatedAt": "2026-04-18T08:35:04.485Z"
+  },
+  {
+    "id": 7,
+    "title": "War Crime in Iran vs Israel War",
+    "shortDescription": "bla bla bla",
+    "description": "bla bla bla",
+    "bannerUrl": null,
+    "date": "2026-04-29",
+    "time": "19:30",
+    "manpower": 32,
+    "expectedBudget": 87000,
+    "organizerId": 2,
+    "organizerName": "Organizer1 Khan",
+    "bankAccount": "DBBL-122435987",
+    "bkashNumber": "01719397202",
+    "nagadNumber": "018193927282",
+    "type": "SEMINAR",
+    "createdAt": "2026-04-18T08:36:40.019Z",
+    "updatedAt": "2026-04-18T08:36:40.019Z"
   }
 ]

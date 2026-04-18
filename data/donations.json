@@ -14,5 +14,32 @@
     "amount": 5000,
     "transactionId": "TXN-1776499413477",
     "createdAt": "2026-04-18T08:03:33.477Z"
+  },
+  {
+    "id": 3,
+    "userId": 3,
+    "initiativeId": 5,
+    "amount": 1200,
+    "transactionId": "BANK-DBBL - 14326980078",
+    "paymentMethod": "bank",
+    "createdAt": "2026-04-18T08:38:24.503Z"
+  },
+  {
+    "id": 4,
+    "userId": 3,
+    "initiativeId": 7,
+    "amount": 3000,
+    "transactionId": "ROCKET-px8976yht7yh7",
+    "paymentMethod": "rocket",
+    "createdAt": "2026-04-18T08:39:11.213Z"
+  },
+  {
+    "id": 5,
+    "userId": 3,
+    "initiativeId": 1,
+    "amount": 4500,
+    "transactionId": "ROCKET-px88ujjygt987",
+    "paymentMethod": "rocket",
+    "createdAt": "2026-04-18T08:39:55.381Z"
   }
 ]

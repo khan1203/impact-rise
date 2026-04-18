@@ -149,14 +149,28 @@ export default function UserDashboard() {
           ) : (
             <div className="space-y-4">
               {donations.map((donation) => (
-                <div key={donation.id} className="flex items-center justify-between rounded-lg border border-gray-100 p-4">
-                  <div>
-                    <p className="font-semibold text-gray-900">{donation.title}</p>
-                    <p className="text-sm text-gray-500 capitalize">{donation.type}</p>
-                  </div>
-                  <div className="text-right">
+                <div key={donation.id} className="rounded-lg border border-gray-100 p-4 hover:border-sky-200 hover:bg-sky-50 transition">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-gray-900">{donation.title}</p>
+                      <p className="text-sm text-gray-500 capitalize">{donation.type}</p>
+                    </div>
                     <p className="font-bold text-sky-700">৳ {donation.amount.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500">{new Date(donation.created_at).toLocaleString()}</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-gray-600 border-t border-gray-100 pt-2">
+                    <span>
+                      <strong>Method:</strong> {donation.payment_method ? donation.payment_method.charAt(0).toUpperCase() + donation.payment_method.slice(1) : 'Unknown'}
+                    </span>
+                    {donation.transaction_id && (
+                      <span className="hidden sm:inline">|</span>
+                    )}
+                    {donation.transaction_id && (
+                      <span>
+                        <strong>TXN:</strong> {donation.transaction_id}
+                      </span>
+                    )}
+                    <span className="hidden sm:inline">|</span>
+                    <span>{new Date(donation.created_at).toLocaleString()}</span>
                   </div>
                 </div>
               ))}
