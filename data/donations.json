@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "userId": 2,
+    "initiativeId": 5,
+    "amount": 500,
+    "transactionId": "TXN-1776499355601",
+    "createdAt": "2026-04-18T08:02:35.601Z"
+  },
+  {
+    "id": 2,
+    "userId": 3,
+    "initiativeId": 2,
+    "amount": 5000,
+    "transactionId": "TXN-1776499413477",
+    "createdAt": "2026-04-18T08:03:33.477Z"
+  }
+]

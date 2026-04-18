@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "email": "admin@impactrise.org",
+    "password": "admin123",
+    "firstName": "Admin",
+    "lastName": "User",
+    "userType": "ORGANIZER",
+    "role": "ADMIN",
+    "createdAt": "2026-03-28T09:52:42.000Z"
+  },
+  {
+    "id": 2,
+    "email": "organizer1@gmail.com",
+    "password": "123456",
+    "firstName": "Organizer1",
+    "lastName": "Khan",
+    "userType": "ORGANIZER",
+    "role": "USER",
+    "createdAt": "2026-03-28T09:52:42.000Z"
+  },
+  {
+    "id": 3,
+    "email": "donor1@gmail.com",
+    "password": "123456",
+    "firstName": "Donor1",
+    "lastName": "Khan",
+    "userType": "DONOR",
+    "role": "USER",
+    "createdAt": "2026-03-28T09:52:42.000Z"
+  }
+]
