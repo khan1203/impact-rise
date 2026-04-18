@@ -374,3 +374,39 @@ export async function createDonation(data) {
     type: initiative ? TYPE_LABEL_MAP[initiative.type] ?? 'campaign' : 'campaign',
   };
 }
+
+export async function getDonationsByPaymentMethod(initiativeId) {
+  const donations = readDonations();
+  
+  // Filter donations for this initiative
+  const initiativeDonations = donations.filter(d => d.initiativeId === Number(initiativeId));
+  
+  // Group by payment method
+  const byMethod = {
+    bkash: 0,
+    rocket: 0,
+    nagad: 0,
+    bank: 0,
+    unknown: 0,
+  };
+  
+  initiativeDonations.forEach(donation => {
+    const method = donation.paymentMethod || 'unknown';
+    const normalizedMethod = method.toLowerCase();
+    
+    if (byMethod.hasOwnProperty(normalizedMethod)) {
+      byMethod[normalizedMethod] += donation.amount;
+    } else {
+      byMethod.unknown += donation.amount;
+    }
+  });
+  
+  // Format for display
+  return {
+    bkash: byMethod.bkash,
+    rocket: byMethod.rocket,
+    nagad: byMethod.nagad,
+    bank: byMethod.bank,
+    total: Object.values(byMethod).reduce((sum, val) => sum + val, 0),
+  };
+}

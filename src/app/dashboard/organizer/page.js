@@ -19,6 +19,7 @@ export default function OrganizerDashboard() {
   const [editingInitiative, setEditingInitiative] = useState(null);
   const [organizer, setOrganizer] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [paymentBreakdown, setPaymentBreakdown] = useState({});
 
   // Load organizer info from localStorage
   useEffect(() => {
@@ -111,6 +112,24 @@ export default function OrganizerDashboard() {
     } catch (error) {
       console.error('Error deleting initiative:', error);
       alert('Error deleting initiative');
+    }
+  };
+
+  const handleExpandClick = async (initiativeId) => {
+    if (expandedId === initiativeId) {
+      setExpandedId(null);
+    } else {
+      setExpandedId(initiativeId);
+      // Fetch payment breakdown
+      try {
+        const response = await fetch(`/api/initiatives/${initiativeId}/donations-by-method`);
+        if (response.ok) {
+          const data = await response.json();
+          setPaymentBreakdown(prev => ({ ...prev, [initiativeId]: data }));
+        }
+      } catch (error) {
+        console.error('Error fetching payment breakdown:', error);
+      }
     }
   };
 
@@ -220,7 +239,7 @@ export default function OrganizerDashboard() {
 
                     {/* Toggle Details */}
                     <button
-                      onClick={() => setExpandedId(expandedId === initiative.id ? null : initiative.id)}
+                      onClick={() => handleExpandClick(initiative.id)}
                       className="mt-3 flex items-center gap-1 text-sky-600 hover:text-sky-700 font-medium"
                     >
                       <ChevronDown
@@ -232,35 +251,76 @@ export default function OrganizerDashboard() {
 
                     {/* Expanded Details */}
                     {expandedId === initiative.id && (
-                      <div className="mt-4 border-t border-gray-200 pt-4 grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Date & Time</p>
-                          <p className="text-gray-900">{initiative.date} {initiative.time || ''}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Expected Budget</p>
-                          <p className="text-gray-900">৳ {initiative.expected_budget?.toLocaleString() || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Collected Donations</p>
-                          <p className="text-gray-900">৳ {initiative.collected_amount?.toLocaleString() || '0'}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Donation Count</p>
-                          <p className="text-gray-900">{initiative.donation_count || 0}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Manpower Needed</p>
-                          <p className="text-gray-900">{initiative.manpower || 'N/A'} people</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Payment Methods</p>
-                          <div className="text-gray-900 space-y-1">
-                            {initiative.bkash_number && <p>bKash: {initiative.bkash_number}</p>}
-                            {initiative.nagad_number && <p>Nagad: {initiative.nagad_number}</p>}
-                            {initiative.bank_account && <p>Bank: {initiative.bank_account}</p>}
+                      <div>
+                        <div className="mt-4 border-t border-gray-200 pt-4 grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Date & Time</p>
+                            <p className="text-gray-900">{initiative.date} {initiative.time || ''}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Expected Budget</p>
+                            <p className="text-gray-900">৳ {initiative.expected_budget?.toLocaleString() || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Collected Donations</p>
+                            <p className="text-gray-900">৳ {initiative.collected_amount?.toLocaleString() || '0'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Donation Count</p>
+                            <p className="text-gray-900">{initiative.donation_count || 0}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Manpower Needed</p>
+                            <p className="text-gray-900">{initiative.manpower || 'N/A'} people</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Payment Methods</p>
+                            <div className="text-gray-900 space-y-1">
+                              {initiative.bkash_number && <p>bKash: {initiative.bkash_number}</p>}
+                              {initiative.nagad_number && <p>Nagad: {initiative.nagad_number}</p>}
+                              {initiative.bank_account && <p>Bank: {initiative.bank_account}</p>}
+                            </div>
                           </div>
                         </div>
+
+                        {/* Payment Gateway Breakdown */}
+                        {paymentBreakdown[initiative.id] && (
+                          <div className="mt-4 border-t border-gray-200 pt-4">
+                            <p className="text-sm font-medium text-gray-700 mb-3">Donations by Payment Gateway</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              {paymentBreakdown[initiative.id].bkash > 0 && (
+                                <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-3 border border-orange-200">
+                                  <p className="text-xs font-medium text-orange-700">bKash</p>
+                                  <p className="text-lg font-bold text-orange-900">৳ {paymentBreakdown[initiative.id].bkash.toLocaleString()}</p>
+                                </div>
+                              )}
+                              {paymentBreakdown[initiative.id].rocket > 0 && (
+                                <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-3 border border-red-200">
+                                  <p className="text-xs font-medium text-red-700">Rocket</p>
+                                  <p className="text-lg font-bold text-red-900">৳ {paymentBreakdown[initiative.id].rocket.toLocaleString()}</p>
+                                </div>
+                              )}
+                              {paymentBreakdown[initiative.id].nagad > 0 && (
+                                <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-3 border border-blue-200">
+                                  <p className="text-xs font-medium text-blue-700">Nagad</p>
+                                  <p className="text-lg font-bold text-blue-900">৳ {paymentBreakdown[initiative.id].nagad.toLocaleString()}</p>
+                                </div>
+                              )}
+                              {paymentBreakdown[initiative.id].bank > 0 && (
+                                <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-3 border border-purple-200">
+                                  <p className="text-xs font-medium text-purple-700">DBBL Bank</p>
+                                  <p className="text-lg font-bold text-purple-900">৳ {paymentBreakdown[initiative.id].bank.toLocaleString()}</p>
+                                </div>
+                              )}
+                            </div>
+                            {paymentBreakdown[initiative.id].bkash === 0 && 
+                             paymentBreakdown[initiative.id].rocket === 0 && 
+                             paymentBreakdown[initiative.id].nagad === 0 && 
+                             paymentBreakdown[initiative.id].bank === 0 && (
+                              <p className="text-xs text-gray-500 italic">No donations received yet</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
