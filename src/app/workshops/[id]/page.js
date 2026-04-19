@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Clock, Users, DollarSign, Award } from 'lucide-react';
 import DonateModal from '@/components/DonateModal';
+import VolunteerModal from '@/components/VolunteerModal';
 import { getInitiativeById } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -78,7 +79,10 @@ export default async function WorkshopDetail({ params }) {
                 </p>
               </div>
             </div>
-            <DonateModal campaignTitle={workshop.title} initiativeId={workshop.id} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <DonateModal campaignTitle={workshop.title} initiativeId={workshop.id} />
+              <VolunteerModal initiativeTitle={workshop.title} initiativeId={workshop.id} />
+            </div>
           </div>
         </div>
       </div>

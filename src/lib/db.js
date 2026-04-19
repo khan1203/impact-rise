@@ -410,3 +410,102 @@ export async function getDonationsByPaymentMethod(initiativeId) {
     total: Object.values(byMethod).reduce((sum, val) => sum + val, 0),
   };
 }
+
+// Volunteer functions
+function readVolunteers() {
+  ensureFiles();
+  try {
+    const volunteersFile = path.join(dataDir, 'volunteers.json');
+    const data = fs.readFileSync(volunteersFile, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeVolunteers(volunteers) {
+  ensureFiles();
+  const volunteersFile = path.join(dataDir, 'volunteers.json');
+  fs.writeFileSync(volunteersFile, JSON.stringify(volunteers, null, 2));
+}
+
+function getNextVolunteerId() {
+  const volunteers = readVolunteers();
+  return volunteers.length > 0 ? Math.max(...volunteers.map(v => v.id)) + 1 : 1;
+}
+
+export async function createVolunteer(data) {
+  const volunteers = readVolunteers();
+
+  const newVolunteer = {
+    id: getNextVolunteerId(),
+    userId: Number(data.user_id),
+    initiativeId: Number(data.initiative_id),
+    name: data.name,
+    presentLocation: data.present_location,
+    profession: data.profession,
+    contributingSkill: data.contributing_skill,
+    whatsappNumber: data.whatsapp_number,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+
+  volunteers.push(newVolunteer);
+  writeVolunteers(volunteers);
+
+  return {
+    id: newVolunteer.id,
+    user_id: newVolunteer.userId,
+    initiative_id: newVolunteer.initiativeId,
+    name: newVolunteer.name,
+    present_location: newVolunteer.presentLocation,
+    profession: newVolunteer.profession,
+    contributing_skill: newVolunteer.contributingSkill,
+    whatsapp_number: newVolunteer.whatsappNumber,
+    status: newVolunteer.status,
+    created_at: newVolunteer.createdAt,
+  };
+}
+
+export async function getInitiativeVolunteers(initiativeId) {
+  const volunteers = readVolunteers();
+
+  const initiativeVolunteers = volunteers
+    .filter(v => v.initiativeId === Number(initiativeId))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return initiativeVolunteers.map(v => ({
+    id: v.id,
+    user_id: v.userId,
+    initiative_id: v.initiativeId,
+    name: v.name,
+    present_location: v.presentLocation,
+    profession: v.profession,
+    contributing_skill: v.contributingSkill,
+    whatsapp_number: v.whatsappNumber,
+    status: v.status,
+    created_at: v.createdAt,
+  }));
+}
+
+export async function getOrganizerVolunteerStats(organizerId, type = null) {
+  const volunteers = readVolunteers();
+  const initiatives = readInitiatives();
+
+  const normalizedType = type ? normalizeInitiativeType(type) : null;
+
+  // Get organizer's initiatives
+  let orgInitiatives = initiatives.filter(i => i.organizerId === Number(organizerId));
+  if (normalizedType) {
+    orgInitiatives = orgInitiatives.filter(i => i.type === normalizedType);
+  }
+
+  const initiativeIds = orgInitiatives.map(i => i.id);
+  const organizerVolunteers = volunteers.filter(v => initiativeIds.includes(v.initiativeId));
+
+  return {
+    totalVolunteers: organizerVolunteers.length,
+    pendingRequests: organizerVolunteers.filter(v => v.status === 'pending').length,
+    approvedVolunteers: organizerVolunteers.filter(v => v.status === 'approved').length,
+  };
+}

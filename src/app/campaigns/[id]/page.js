@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Clock, Users, DollarSign, Award } from 'lucide-react';
 import DonateModal from '@/components/DonateModal';
+import VolunteerModal from '@/components/VolunteerModal';
 import { getInitiativeById } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -83,7 +84,10 @@ export default async function CampaignDetail({ params }) {
               </div>
             </div>
 
-            <DonateModal campaignTitle={campaign.title} initiativeId={campaign.id} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <DonateModal campaignTitle={campaign.title} initiativeId={campaign.id} />
+              <VolunteerModal initiativeTitle={campaign.title} initiativeId={campaign.id} />
+            </div>
           </div>
         </div>
       </div>

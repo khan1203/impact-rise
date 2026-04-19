@@ -8,10 +8,12 @@ import EditInitiativeModal from '@/components/EditInitiativeModal';
 export default function OrganizerDashboard() {
   const [activeTab, setActiveTab] = useState('campaigns');
   const [initiatives, setInitiatives] = useState([]);
+  const [volunteers, setVolunteers] = useState([]);
   const [stats, setStats] = useState({
     totalCollected: 0,
     totalDonations: 0,
     totalInitiatives: 0,
+    totalVolunteers: 0,
   });
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -20,6 +22,7 @@ export default function OrganizerDashboard() {
   const [organizer, setOrganizer] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [paymentBreakdown, setPaymentBreakdown] = useState({});
+  const [volunteersByInitiative, setVolunteersByInitiative] = useState({});
 
   // Load organizer info from localStorage
   useEffect(() => {
@@ -77,19 +80,45 @@ export default function OrganizerDashboard() {
   const fetchInitiatives = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/organizer/initiatives?type=${activeTab}&organizerId=${organizer.id}`);
-      const data = await response.json();
-      setInitiatives(data.initiatives || []);
-      setStats(
-        data.stats || {
-          totalCollected: 0,
-          totalDonations: 0,
-          totalInitiatives: 0,
-        }
-      );
+      if (activeTab === 'volunteers') {
+        // Fetch volunteers for all initiatives
+        const response = await fetch(`/api/organizer/volunteers?organizerId=${organizer.id}`);
+        const data = await response.json();
+
+        // Normalize volunteer shape to make UI robust against key casing differences
+        const normalized = (data.volunteers || []).map((v) => ({
+          id: v.id ?? v.id,
+          name: v.name ?? v.fullName ?? v.full_name ?? 'Unknown',
+          present_location: v.present_location ?? v.presentLocation ?? v.presentLocation ?? v.presentLocation ?? '',
+          profession: v.profession ?? v.profession ?? '',
+          contributing_skill: v.contributing_skill ?? v.contributingSkill ?? v.skill ?? 'other',
+          initiative_title: v.initiative_title ?? v.initiativeTitle ?? v.initiative_name ?? 'Unknown Initiative',
+          created_at: v.created_at ?? v.createdAt ?? v.createdAt ?? new Date().toISOString(),
+          status: v.status ?? 'pending',
+          whatsapp_number: v.whatsapp_number ?? v.whatsappNumber ?? v.whatsapp ?? '',
+          user_email: v.user_email ?? v.email ?? '',
+        }));
+
+        setVolunteers(normalized);
+        setStats(prev => ({
+          ...prev,
+          totalVolunteers: normalized.length || 0,
+        }));
+      } else {
+        // Fetch initiatives
+        const response = await fetch(`/api/organizer/initiatives?type=${activeTab}&organizerId=${organizer.id}`);
+        const data = await response.json();
+        setInitiatives(data.initiatives || []);
+        setStats(prev => ({
+          ...prev,
+          totalCollected: data.stats?.totalCollected || 0,
+          totalDonations: data.stats?.totalDonations || 0,
+          totalInitiatives: data.stats?.totalInitiatives || 0,
+        }));
+      }
     } catch (error) {
-      console.error('Error fetching initiatives:', error);
-      alert('Failed to load initiatives');
+      console.error('Error fetching data:', error);
+      alert('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -161,6 +190,7 @@ export default function OrganizerDashboard() {
     { id: 'campaigns', label: 'Campaigns' },
     { id: 'seminars', label: 'Seminars' },
     { id: 'workshops', label: 'Workshops' },
+    { id: 'volunteers', label: 'Volunteers' },
   ];
 
   return (
@@ -183,18 +213,27 @@ export default function OrganizerDashboard() {
           </div>
 
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
-              <p className="text-sm font-medium text-gray-500">Collected So Far</p>
-              <p className="mt-1 text-2xl font-bold text-sky-700">৳ {stats.totalCollected.toLocaleString()}</p>
-            </div>
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-              <p className="text-sm font-medium text-gray-500">Total Donations</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalDonations}</p>
-            </div>
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-              <p className="text-sm font-medium text-gray-500">Active In This Tab</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalInitiatives}</p>
-            </div>
+            {activeTab !== 'volunteers' ? (
+              <>
+                <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
+                  <p className="text-sm font-medium text-gray-500">Collected So Far</p>
+                  <p className="mt-1 text-2xl font-bold text-sky-700">৳ {stats.totalCollected.toLocaleString()}</p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p className="text-sm font-medium text-gray-500">Total Donations</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalDonations}</p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <p className="text-sm font-medium text-gray-500">Active In This Tab</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalInitiatives}</p>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 md:col-span-3">
+                <p className="text-sm font-medium text-gray-500">Total Volunteer Requests</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-700">{stats.totalVolunteers}</p>
+              </div>
+            )}
           </div>
 
           {/* Tabs */}
@@ -223,7 +262,7 @@ export default function OrganizerDashboard() {
         )}
 
         {/* Initiatives List */}
-        {!loading && initiatives.length > 0 && (
+        {!loading && activeTab !== 'volunteers' && initiatives.length > 0 && (
           <div className="space-y-4">
             {initiatives.map((initiative) => (
               <div key={initiative.id} className="rounded-lg bg-white p-6 shadow hover:shadow-lg transition">
@@ -363,8 +402,71 @@ export default function OrganizerDashboard() {
           </div>
         )}
 
+        {/* Volunteers List */}
+        {!loading && activeTab === 'volunteers' && volunteers.length > 0 && (
+          <div className="space-y-4">
+            {volunteers.map((volunteer) => (
+              <div key={volunteer.id} className="rounded-lg bg-white p-6 shadow hover:shadow-lg transition">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-xl font-bold text-gray-900">{volunteer.name}</h3>
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
+                        Volunteer
+                      </span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Location</p>
+                        <p className="mt-1 text-gray-900">{volunteer.present_location}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Profession</p>
+                        <p className="mt-1 text-gray-900">{volunteer.profession}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Skill</p>
+                        <p className="mt-1 text-gray-900">{volunteer.contributing_skill.replace(/_/g, ' ')}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Initiative</p>
+                        <p className="mt-1 text-gray-900">{volunteer.initiative_title}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">WhatsApp Contact</p>
+                        <a 
+                          href={`https://wa.me/${volunteer.whatsapp_number.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 text-emerald-600 hover:text-emerald-700 font-medium break-all"
+                        >
+                          {volunteer.whatsapp_number}
+                        </a>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Date Applied</p>
+                        <p className="mt-1 text-gray-900">{new Date(volunteer.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Status</p>
+                        <p className="mt-1">
+                          <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                            {volunteer.status || 'pending'}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Empty State */}
-        {!loading && initiatives.length === 0 && (
+        {!loading && activeTab !== 'volunteers' && initiatives.length === 0 && (
           <div className="rounded-xl bg-white p-12 text-center shadow">
             <p className="mb-4 text-gray-600">No {activeTab} yet. Create your first initiative!</p>
             <button
@@ -374,6 +476,13 @@ export default function OrganizerDashboard() {
               <Plus size={20} />
               Create {activeTab.slice(0, -1)}
             </button>
+          </div>
+        )}
+
+        {/* Empty State for Volunteers */}
+        {!loading && activeTab === 'volunteers' && volunteers.length === 0 && (
+          <div className="rounded-xl bg-white p-12 text-center shadow">
+            <p className="text-gray-600">No volunteer requests yet. When users volunteer, they'll appear here.</p>
           </div>
         )}
       </div>
